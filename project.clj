@@ -11,11 +11,11 @@
                  [org.clojure/core.async  "0.4.500"]
                  [reagent "2.0.1"]
                  [cljsjs/react "18.3.1-1"]
-                 [cljsjs/react-dom "18.3.1-1"]
+                 [cljsjs/react-dom "18.3.1-1"]]
 
   :plugins [[lein-figwheel "0.5.20"]
             [lein-cljsbuild "1.1.7" :exclusions [[org.clojure/clojure]]]
-            [lein-shell "0.5.0"]
+            [lein-shell "0.5.0"]]
 
   :source-paths ["src"]
 
@@ -59,12 +59,10 @@
 
   :figwheel {:css-dirs ["resources/public/css"]} ;; watch and update CSS
 
-  :profiles {:dev [:project/dev :profiles/dev]
-             :profiles/dev {}
-             :project/dev {:dependencies [[binaryage/devtools "1.0.0"]
-                                          [figwheel-sidecar "0.5.20"]]
+  :profiles {:dev {:dependencies [[binaryage/devtools "1.0.0"]
+                                  [figwheel-sidecar "0.5.20"]]
                            ;; need to add dev source path here to get user.clj loaded
-                           :source-paths ["src" "dev"]
-                           ;; need to add the compiled assets to the :clean-targets
-                           :clean-targets ^{:protect false} ["resources/public/js/compiled"
-                                                             :target-path]}})
+                   :source-paths ["src" "dev"]
+                   ;; need to add the compiled assets to the :clean-targets
+                   :clean-targets ^{:protect false} ["resources/public/js/compiled"
+                                                     :target-path]}})

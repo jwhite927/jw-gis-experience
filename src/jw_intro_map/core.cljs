@@ -1,11 +1,11 @@
 (ns jw-intro-map.core
   (:require [reagent.core :as r]
-            [reagent.dom :as rdom]
-            [environ.core :refer [env]]))
+            [reagent.dom :as rdom])
+  (:require-macros [jw-intro-map.macros]))
 
 ;; Your Mapbox public access token (starts with "pk."). Get one at
 ;; https://account.mapbox.com/access-tokens/
-(def mapbox-token (env :mapbox-public-token))
+(def mapbox-token (jw-intro-map.macros/load-mapbox-token))
 
 ;; Holds the mapboxgl.Map instance so it survives reloads and isn't
 ;; recreated on every render.
@@ -60,8 +60,5 @@
 
 (defn on-js-reload []
   (mount-root))
-  ;; optionally touch your app-state to force rerendering depending on
-  ;; your application
-  ;; (swap! app-state update-in [:__figwheel_counter] inc)
 
 (mount-root)
