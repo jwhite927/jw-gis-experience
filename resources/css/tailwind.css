@@ -4,3 +4,9 @@
 @source "../../src";
 
 /* Add any custom CSS below this line */
+#jw-map {
+  width: 100%;
+  height: 400px;
+  margin-top: 1rem;
+  border-radius: 0.5rem;
+}
