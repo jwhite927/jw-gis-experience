@@ -1,0 +1,6 @@
+@import "tailwindcss";
+
+/* Scan ClojureScript sources for utility class names */
+@source "../../src";
+
+/* Add any custom CSS below this line */
