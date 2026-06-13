@@ -7,6 +7,11 @@
 ;; https://account.mapbox.com/access-tokens/
 (def mapbox-token (jw-intro-map.macros/load-mapbox-token))
 
+(def locations [{:title "The REED Center for Ecosystem Reintegration"
+                 :lnglat #js [-77.602403 39.436613]}
+                {:title "Infiswift Technologies"
+                 :lnglat #js [-121.910136 37.450127]}])
+
 ;; Holds the mapboxgl.Map instance so it survives reloads and isn't
 ;; recreated on every render.
 (defonce map-instance (atom nil))
@@ -18,10 +23,17 @@
   (let [^js m (js/mapboxgl.Map.
                 #js {:container (.getElementById js/document id)
                      :style "mapbox://styles/mapbox/streets-v12"
-                     :center #js [-122.27 37.80] ;; [lng lat]
+                     :center #js [-77.602403 39.436613] ;; [lng lat]
                      :zoom 9})]
     (.addControl m (js/mapboxgl.NavigationControl.))
     (reset! map-instance m)))
+
+(defn create-marker!
+  "Initialize a Mapbox marker on map at the given lng lat."
+  [^js m {:keys [^js lnglat]}]
+  (let [^js marker (js/mapboxgl.Marker.)]
+    (.setLngLat marker lnglat)
+    (.addTo marker m)))
 
 (defn map-view
   "Form-3 Reagent component that owns a Mapbox map. Reagent never
@@ -31,7 +43,9 @@
     {:display-name "map-view"
      :component-did-mount
      (fn [_]
-       (create-map! "jw-map"))
+       (let [m (create-map! "jw-map")]
+         (doseq [l locations]
+           (create-marker! m l))))
      :component-will-unmount
      (fn [_]
        (when-let [^js m @map-instance]
@@ -46,10 +60,10 @@
    [:h1 {:class "text-4xl font-bold"}
     "Josh's Fit with SIG"]
    [:div {}
-    [:span "In my journey as an engineer, my sensibility and skillset to be closely aligned with the "]
+    [:span "In my journey as an engineer, I developed strong values for maintainability, simplicity, and reliability in developing systems and processes. As a result, I believe I am well suited for the "]
     [:span {:class "font-bold"} "Full Stack Developer - Pyrecast at Spatial Informatics Group"]
     [:span " role."]]
-   [:span "I created this map using reagent and mapbox to both demonstrate these skills and describe these experiences:"]
+   [:span "I created this map using Reagent and Mapbox to both demonstrate these skills and describe these experiences:"]
    [map-view]])
 
 (defn mount-root []
