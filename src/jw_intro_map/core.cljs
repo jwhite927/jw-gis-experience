@@ -12,9 +12,13 @@
                 {:title "Infiswift Technologies"
                  :lnglat #js [-121.910136 37.450127]}])
 
+(defn current-location [index]
+  (get locations (mod index (count locations))))
+
 ;; Holds the mapboxgl.Map instance so it survives reloads and isn't
 ;; recreated on every render.
 (defonce map-instance (atom nil))
+(def selected-location (r/atom 0))
 
 (defn create-map!
   "Initialize a Mapbox GL map on the given DOM node."
@@ -64,7 +68,11 @@
     [:span {:class "font-bold"} "Full Stack Developer - Pyrecast at Spatial Informatics Group"]
     [:span " role."]]
    [:span "I created this map using Reagent and Mapbox to both demonstrate these skills and describe these experiences:"]
-   [map-view]])
+   [map-view]
+   [:button {:on-click #(do
+                          (swap! selected-location + 1)
+                          (.panTo @map-instance (:lnglat (current-location @selected-location))))} (str "A button " @selected-location)]
+   [:div (str (current-location @selected-location))]])
 
 (defn mount-root []
   (rdom/render [init-component] (.getElementById js/document "app")))
