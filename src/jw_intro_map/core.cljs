@@ -1,6 +1,7 @@
 (ns jw-intro-map.core
   (:require [reagent.core :as r]
-            [reagent.dom :as rdom])
+            [reagent.dom :as rdom]
+            [clojure.string :as str])
   (:require-macros [jw-intro-map.macros]))
 
 (def mapbox-token (jw-intro-map.macros/load-mapbox-token))
@@ -8,23 +9,23 @@
 (def locations [{:title "The REED Center for Ecosystem Reintegration"
                  :lnglat #js [-77.602403 39.436613]
                  :zoom 4
-                 :place "Middletown, MD"
+                 :place "Middletown, Maryland, USA"
                  :year "2022 - 2026"
                  :role "Sole Developer"
-                 :stack ["Clojure" "ClojureScript" "Electric v3" "Datahike" "OpenDroneMap" "OpenLayers"]
-                 :blurb "I developed a mapping application to help orient visitors to a food forest under active development."}
+                 :stack ["Clojure" "ClojureScript" "Electric v3" "Datahike" "OpenLayers" "OpenDroneMap" "GDAL"]
+                 :blurb "I designed and built a mapping application to help orient visitors to the plants growing in a food forest under active development."}
                 {:title "SLB's ValveCommander (Infiswift)"
                  :lnglat #js [-95.473717 29.749439]
                  :zoom 4
-                 :place "Houston, TX"
+                 :place "Houston, Texas, USA"
                  :year "2022 - 2023"
                  :role "Consulting Full-Stack Developer"
                  :stack ["Typescript" "Angular" "C#" "Azure IoT" "Azure Pipelines"]
                  :blurb "I designed and shipped new features in an app used to monitor and control an active oil well."}
-                {:title "Virtual Power Plant"
+                {:title "Virtual Power Plant (Infiswift)"
                  :lnglat #js [139.767336 35.651331]
                  :zoom 4
-                 :place ""
+                 :place "Tokyo, Japan"
                  :year "2020 - 2021"
                  :role "Deployment Engineer"
                  :stack ["Python" "AWS" "Docker" "MySql" "Elasticsearch" "Logstash" "Prometheus" "Jenkins Pipelines"]
@@ -38,15 +39,10 @@
   [^js lnglat]
   (and lnglat (pos? (.-length lnglat))))
 
-;; Holds the mapboxgl.Map instance so it survives reloads and isn't
-;; recreated on every render.
 (defonce map-instance (atom nil))
-;; Marker objects collected in location order so we can highlight the active
-;; one. nil where a location has no :lnglat yet.
 (defonce markers (atom []))
 (def selected-location (r/atom 0))
-
-;; ---- camera + marker highlight (mapbox stays outside Reagent's render) ----
+(def map-error (r/atom nil))
 
 (defn fly-to!
   "Ease the camera to location `i`."
@@ -73,14 +69,12 @@
   [step]
   (swap! selected-location + step))
 
-;; Drive the camera off a watch, not render.
 (defonce camera-watch
   (add-watch selected-location ::fly
              (fn [_ _ _ i]
                (fly-to! i)
                (highlight! i))))
 
-;; ←/→ keys cycle, same as the arrow buttons.
 (defonce keyboard-listener
   (.addEventListener
     js/document "keydown"
@@ -93,7 +87,8 @@
 ;; ---- map construction ----
 
 (defn create-map!
-  "Initialize a Mapbox GL map on the given DOM node."
+  "Initialize a Mapbox GL map on the given DOM node. Returns the Map, or nil
+  when there's no token to build it with."
   [^js id]
   (set! (.-accessToken js/mapboxgl) mapbox-token)
   (let [^js m (js/mapboxgl.Map.
@@ -101,8 +96,12 @@
                      :style "mapbox://styles/mapbox/streets-v12"
                      :center (-> locations first :lnglat) ;; [lng lat]
                      :zoom 4})]
+    (.on m "error" (fn [^js e]
+                     (js/console.error "Mapbox error:" (.-error e))
+                     (reset! map-error "Map failed to load.")))
     (.addControl m (js/mapboxgl.NavigationControl.))
-    (reset! map-instance m)))
+    (reset! map-instance m)
+    m))
 
 (defn create-marker!
   "Build a custom DOM marker on `m` for location index `i`. Clicking it
@@ -157,22 +156,24 @@
     {:display-name "map-view"
      :component-did-mount
      (fn [_]
-       (let [m (create-map! "jw-map")]
-         (reset! markers
-                 (vec (map-indexed (fn [i l] (create-marker! m i l)) locations)))
-         (highlight! @selected-location)))
+       (if (str/blank? mapbox-token)
+         (reset! map-error "No Mapbox token detected!")
+         (let [m (create-map! "jw-map")]
+           (reset! markers
+                   (vec (map-indexed (fn [i l] (create-marker! m i l)) locations)))
+           (highlight! @selected-location))))
      :component-will-unmount
      (fn [_]
        (when-let [^js m @map-instance]
          (.remove m)
          (reset! map-instance nil)
          (reset! markers [])))
-     :component-did-catch
-     (fn []
-       [:div "No Mapbox token detected!"])
      :reagent-render
      (fn []
-       [:div#jw-map])}))
+       (if-let [err @map-error]
+         [:div {:class "grid place-items-center rounded-lg border border-ink-2 bg-card text-ink-2 text-sm p-6"}
+          err]
+         [:div#jw-map]))}))
 
 (defn project-card [{:keys [title place year role stack blurb]}]
   [:div {:class "jw-card flex-1 relative rounded-lg border border-ink-2 bg-card p-3.5"}
