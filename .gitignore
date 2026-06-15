@@ -18,3 +18,6 @@ pom.xml
 /.clj-kondo
 /profiles.edn
 /.lein-env
+
+# Local Netlify folder
+.netlify
