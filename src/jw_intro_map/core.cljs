@@ -125,11 +125,13 @@
    [:h1 {:class "text-3xl font-bold leading-tight mt-2"}
     "Josh's Fit with SIG"]
    [:p {:class "text-sm text-ink-2 leading-relaxed mt-3"}
-    "In my journey as an engineer, I developed strong values for maintainability, simplicity, and reliability in developing systems and processes. As a result, I believe I am well suited for the "
+    "I learned to consider maintainability, simplicity, and reliability in every design decision I made as an engineer. This is why I thoroughly appreciate the expressiveness and simplicity of Clojure, especially in the GIS domain, where incidental complexity can build up rapidly. I would be thrilled to apply this learning in the  "
     [:span {:class "font-semibold text-ink"} "Full Stack Developer - Pyrecast at Spatial Informatics Group"]
     " role."]
    [:p {:class "text-sm text-ink-2 leading-relaxed mt-2"}
-    "I created this map using Reagent and Mapbox to both demonstrate these skills and describe these experiences:"]])
+    [:span "I created this small map demo using Reagent and Mapbox to both demonstrate these skills and describe these experiences. "]
+    [:a {:class "text-accent font-semibold underline px-3" :target "_blank" :href "https://github.com/jwhite927/jw-gis-experience"} "View the Source on Github"]]])
+
 
 (defn- pad2 [n]
   (if (< n 10) (str "0" n) (str n)))
