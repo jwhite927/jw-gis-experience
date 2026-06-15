@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Wireframe — Clojure GIS Field Notes (Reagent blueprint)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;600;700&family=Public+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --paper: #f4f2ec;
+    --card:  #fbfaf6;
+    --ink:   #2c2a26;
+    --ink-2: #6b6760;
+    --ink-3: #9a958c;
+    --line:  #2c2a26;
+    --hatch: #cfcabd;
+    --accent:#b85c38;
+    --accent-soft:#f0dcd1;
+    --sans: "Public Sans", system-ui, sans-serif;
+    --mono: "IBM Plex Mono", ui-monospace, monospace;
+    --hand: "Caveat", cursive;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--paper); color: var(--ink);
+    font-family: var(--sans);
+    background-image: radial-gradient(#d9d4c7 1px, transparent 1px);
+    background-size: 20px 20px;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 1240px; margin: 0 auto; padding: 36px clamp(16px,3vw,40px) 80px; }
+
+  /* ---- masthead ---- */
+  .mast { display: flex; align-items: flex-end; justify-content: space-between; gap: 20px; flex-wrap: wrap; border-bottom: 2px solid var(--line); padding-bottom: 16px; margin-bottom: 28px; }
+  .mast h1 { font-family: var(--mono); font-size: 19px; font-weight: 600; margin: 0; letter-spacing: -0.01em; }
+  .mast .sub { font-family: var(--hand); font-size: 24px; color: var(--accent); transform: rotate(-1.5deg); margin-top: 2px; }
+  .mast .meta { font-family: var(--mono); font-size: 11.5px; color: var(--ink-3); text-align: right; line-height: 1.7; }
+  .tag { display: inline-block; font-family: var(--mono); font-size: 10.5px; font-weight: 600; letter-spacing: 0.1em; padding: 3px 8px; border: 1.5px solid var(--line); border-radius: 4px; background: var(--card); text-transform: uppercase; }
+
+  /* ---- layout ---- */
+  .cols { display: grid; grid-template-columns: minmax(0,1.15fr) minmax(300px,0.85fr); gap: 30px; align-items: start; }
+  @media (max-width: 860px){ .cols { grid-template-columns: 1fr; } }
+
+  /* ---- wireframe screen ---- */
+  .screen { background: var(--card); border: 2px solid var(--line); border-radius: 10px; padding: 22px; box-shadow: 6px 6px 0 #e3ddd0; position: relative; }
+  .screen-cap { position: absolute; top: -12px; left: 18px; background: var(--accent); color: #fff; font-family: var(--mono); font-size: 11px; font-weight: 600; letter-spacing: 0.06em; padding: 3px 10px; border-radius: 4px; }
+
+  .num { position: absolute; width: 22px; height: 22px; border-radius: 50%; background: var(--ink); color: #fff; font-family: var(--mono); font-size: 12px; font-weight: 600; display: grid; place-items: center; z-index: 4; }
+
+  .block { position: relative; border: 1.6px dashed var(--ink-2); border-radius: 7px; padding: 14px; margin-bottom: 16px; }
+  .block-lbl { position: absolute; top: -9px; right: 10px; background: var(--card); padding: 0 6px; font-family: var(--mono); font-size: 10px; color: var(--accent); font-weight: 600; letter-spacing: 0.04em; }
+
+  .bar { height: 11px; background: var(--hatch); border-radius: 3px; margin: 6px 0; }
+  .bar.h { height: 20px; }
+  .bar.xl { height: 28px; }
+  .bar.acc { background: var(--accent-soft); }
+  .center { text-align: center; }
+  .center .bar { margin-left: auto; margin-right: auto; }
+  .eyebrow { font-family: var(--mono); font-size: 10px; letter-spacing: 0.16em; color: var(--accent); font-weight: 600; }
+
+  /* counter + ticks */
+  .counter-row { display: flex; align-items: center; justify-content: space-between; }
+  .counter { font-family: var(--mono); font-size: 13px; font-weight: 600; }
+  .counter .tot { color: var(--ink-3); }
+  .ticks { display: flex; gap: 6px; }
+  .ticks i { width: 20px; height: 4px; border-radius: 3px; background: var(--hatch); }
+  .ticks i.on { background: var(--accent); width: 28px; }
+
+  /* map */
+  .map { height: 220px; border: 1.6px solid var(--ink-2); border-radius: 7px; position: relative; overflow: hidden;
+    background-image: repeating-linear-gradient(45deg, transparent 0 9px, #e7e1d4 9px 10px); }
+  .map .canvas-lbl { position: absolute; inset: 0; display: grid; place-items: center; font-family: var(--mono); font-size: 12px; color: var(--ink-3); letter-spacing: 0.1em; }
+  .pin { position: absolute; width: 12px; height: 12px; border-radius: 50%; background: var(--card); border: 2px solid var(--ink-2); }
+  .pin.active { width: 22px; height: 22px; background: var(--accent); border-color: #fff; box-shadow: 0 0 0 6px rgba(184,92,56,0.18); }
+  .pin.active::after { content: ""; position: absolute; inset: -8px; border-radius: 50%; border: 1.5px solid var(--accent); opacity: 0.5; }
+
+  /* control row */
+  .controls { display: flex; gap: 12px; align-items: stretch; }
+  .arrow { flex: 0 0 auto; width: 44px; border: 1.6px solid var(--ink-2); border-radius: 8px; display: grid; place-items: center; font-size: 20px; color: var(--ink-2); background: var(--card); }
+  .desc-card { flex: 1; border: 1.6px solid var(--ink-2); border-radius: 8px; padding: 12px 14px; position: relative; }
+  .desc-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; margin-bottom: 8px; }
+  .chips { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
+  .chips span { font-family: var(--mono); font-size: 10px; border: 1.4px solid var(--ink-3); border-radius: 5px; padding: 2px 7px; color: var(--ink-2); }
+
+  /* annotations */
+  .anno { font-family: var(--hand); font-size: 17px; line-height: 1.15; color: var(--accent); }
+
+  /* ---- spec panels ---- */
+  .panel { background: var(--card); border: 2px solid var(--line); border-radius: 10px; margin-bottom: 18px; box-shadow: 4px 4px 0 #e3ddd0; overflow: hidden; }
+  .panel > h3 { margin: 0; font-family: var(--mono); font-size: 12px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; padding: 11px 14px; border-bottom: 1.6px solid var(--line); background: var(--paper); display: flex; align-items: center; gap: 8px; }
+  .panel > h3 .badge { width: 18px; height: 18px; border-radius: 50%; background: var(--ink); color: #fff; font-size: 10px; display: grid; place-items: center; }
+  .panel .body { padding: 14px; }
+  pre { margin: 0; font-family: var(--mono); font-size: 12px; line-height: 1.6; color: var(--ink); white-space: pre-wrap; word-break: break-word; }
+  pre .k { color: var(--accent); }
+  pre .c { color: var(--ink-3); font-style: italic; }
+  pre .s { color: #5a6e3a; }
+  ul.notes { margin: 0; padding-left: 18px; }
+  ul.notes li { font-size: 13px; line-height: 1.55; color: var(--ink-2); margin-bottom: 8px; }
+  ul.notes li b { color: var(--ink); font-weight: 600; }
+  .pill-row { display: flex; gap: 8px; flex-wrap: wrap; }
+  .pill { font-family: var(--mono); font-size: 11px; border: 1.5px solid var(--line); border-radius: 20px; padding: 4px 11px; background: var(--paper); }
+  code.inl { font-family: var(--mono); font-size: 12px; background: var(--paper); border: 1px solid var(--hatch); border-radius: 4px; padding: 1px 5px; color: var(--accent); }
+  .legend { font-family: var(--hand); font-size: 18px; color: var(--ink-2); margin: 0 0 18px; transform: rotate(-0.6deg); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="mast">
+    <div>
+      <h1>WIREFRAME · Clojure-GIS Field Notes</h1>
+      <div class="sub">jw-intro-map.core blueprint →</div>
+    </div>
+    <div class="meta">
+      <span class="tag">LOW-FI</span><br />
+      single screen · matched to repo<br />
+      jw-intro-map · reagent + tailwind v4
+    </div>
+  </div>
+
+  <p class="legend">Boxes = layout regions. ① ② ③ tie each region to the component tree on the right. Hatched box = the live Mapbox GL canvas.</p>
+
+  <div class="cols">
+    <!-- ============ SCREEN ============ -->
+    <div class="screen">
+      <span class="screen-cap">init-component  ·  one route, no nav</span>
+
+      <!-- header -->
+      <div class="block">
+        <span class="num" style="top:-11px; left:-11px;">1</span>
+        <span class="block-lbl">intro-header</span>
+        <div class="center">
+          <div class="eyebrow">FIELD NOTES · GIS IN PRODUCTION</div>
+          <div class="bar xl" style="width:88%; margin-top:10px;"></div>
+          <div class="bar xl acc" style="width:62%;"></div>
+          <div class="bar" style="width:80%; margin-top:12px;"></div>
+          <div class="bar" style="width:74%;"></div>
+          <div class="bar" style="width:50%;"></div>
+        </div>
+      </div>
+
+      <!-- counter -->
+      <div class="block" style="padding:10px 14px;">
+        <span class="num" style="top:-11px; left:-11px;">2</span>
+        <span class="block-lbl">progress-bar</span>
+        <div class="counter-row">
+          <span class="counter">02 <span class="tot">/ 05</span></span>
+          <span class="ticks"><i></i><i class="on"></i><i></i><i></i><i></i></span>
+        </div>
+      </div>
+
+      <!-- map -->
+      <div class="block" style="padding:8px;">
+        <span class="num" style="top:-11px; left:-11px;">3</span>
+        <span class="block-lbl">map-view  (form-3 / mapbox interop)</span>
+        <div class="map">
+          <div class="canvas-lbl">▦ MAPBOX&nbsp;GL&nbsp;CANVAS</div>
+          <div class="pin" style="top:30%; left:22%;"></div>
+          <div class="pin active" style="top:48%; left:54%;"></div>
+          <div class="pin" style="top:66%; left:38%;"></div>
+          <div class="pin" style="top:26%; left:74%;"></div>
+          <div class="pin" style="top:72%; left:80%;"></div>
+        </div>
+      </div>
+
+      <!-- controls -->
+      <div class="block" style="border-style:solid; border-color:var(--accent);">
+        <span class="num" style="top:-11px; left:-11px;">4</span>
+        <span class="block-lbl" style="color:var(--accent);">cycler  (prev · description · next)</span>
+        <div class="controls">
+          <div class="arrow">‹</div>
+          <div class="desc-card">
+            <span class="num" style="top:-11px; right:-11px; background:var(--accent);">5</span>
+            <div class="desc-head">
+              <div style="flex:1;">
+                <div class="eyebrow">◆ BOULDER, CO · USA</div>
+                <div class="bar h" style="width:60%; margin-top:6px;"></div>
+              </div>
+              <div style="text-align:right;">
+                <div class="bar" style="width:44px; height:14px; background:var(--accent-soft);"></div>
+                <div class="bar" style="width:60px; height:8px;"></div>
+              </div>
+            </div>
+            <div class="bar" style="width:96%;"></div>
+            <div class="bar" style="width:90%;"></div>
+            <div class="bar" style="width:70%;"></div>
+            <div class="chips"><span>Clojure</span><span>GeoTools</span><span>PostGIS</span><span>Datomic</span></div>
+          </div>
+          <div class="arrow">›</div>
+        </div>
+        <div class="anno" style="margin-top:10px;">↑ description for the <u>active</u> marker shows between the arrows · ← / → keys also cycle</div>
+      </div>
+    </div>
+
+    <!-- ============ SPEC ============ -->
+    <div>
+      <!-- state -->
+      <div class="panel">
+        <h3><span class="badge">★</span> state · matches your existing atoms</h3>
+        <div class="body">
+<pre><span class="c">;; KEEP your existing two-atom split:</span>
+(defonce map-instance (r/atom nil)) <span class="c">; mapboxgl.Map</span>
+(def selected-location (r/atom 0))  <span class="c">; just the index</span>
+
+<span class="c">;; EXTEND your `locations` vector with the copy
+;; the card needs. Keep :title + :lnglat #js [..]</span>
+(def locations
+  [{<span class="k">:title</span>  <span class="s">"Infiswift Technologies"</span>
+    <span class="k">:lnglat</span> #js [-121.910136 37.450127]
+    <span class="k">:zoom</span>   9.5
+    <span class="k">:place</span>  <span class="s">"Pleasanton, CA"</span>
+    <span class="k">:year</span>   <span class="s">"2021"</span> <span class="k">:role</span> <span class="s">"Backend + GIS"</span>
+    <span class="k">:stack</span>  [<span class="s">"Clojure"</span> <span class="s">"core.async"</span> ...]
+    <span class="k">:blurb</span>  <span class="s">"..."</span>}
+   ...])
+
+<span class="c">;; you already have this — reuse it</span>
+(defn current-location [i]
+  (get locations (mod i (count locations))))</pre>
+        </div>
+      </div>
+
+      <!-- component tree -->
+      <div class="panel">
+        <h3><span class="badge">▤</span> component tree (hiccup + tailwind)</h3>
+        <div class="body">
+<pre>[<span class="k">init-component</span>]  <span class="c">; your existing root</span>
+ ├─ <span class="num" style="position:static;display:inline-grid;vertical-align:middle;">1</span> [<span class="k">intro-header</span>]   <span class="c">; the existing h1 + copy</span>
+ ├─ <span class="num" style="position:static;display:inline-grid;vertical-align:middle;">2</span> [<span class="k">progress-bar</span>]  <span class="c">; "02/05" + ticks</span>
+ ├─ <span class="num" style="position:static;display:inline-grid;vertical-align:middle;">3</span> [<span class="k">map-view</span>]      <span class="c">; your form-3, keep it</span>
+ └─ <span class="num" style="position:static;display:inline-grid;vertical-align:middle;">4</span> [<span class="k">cycler</span>]       <span class="c">; replaces the lone button</span>
+      ├─ [<span class="k">arrow-btn</span> <span class="s">:prev</span>]
+      ├─ <span class="num" style="position:static;display:inline-grid;vertical-align:middle;background:var(--accent);">5</span> [<span class="k">project-card</span> loc]
+      └─ [<span class="k">arrow-btn</span> <span class="s">:next</span>]
+
+<span class="c">;; tailwind in :class map (your convention)</span>
+(defn cycler []
+  [<span class="s">:div</span>
+   {<span class="k">:class</span> <span class="s">"flex items-stretch gap-3 mt-4"</span>}
+   [arrow-btn <span class="k">:prev</span>]
+   [project-card (current-location @selected-location)]
+   [arrow-btn <span class="k">:next</span>]])
+
+(defn arrow-btn [dir]
+  [<span class="s">:button</span>
+   {<span class="k">:class</span> <span class="s">"w-11 grid place-items-center rounded-lg
+            border border-stone-300 hover:border-accent"</span>
+    <span class="k">:on-click</span> #(go! (if (= dir <span class="k">:prev</span>) -1 1))}
+   (if (= dir <span class="k">:prev</span>) <span class="s">"‹"</span> <span class="s">"›"</span>)])
+
+<span class="c">;; cycling = pure index math on selected-location</span>
+(defn go! [dir]
+  (swap! selected-location + dir)) <span class="c">; current-location does the mod</span></pre>
+        </div>
+      </div>
+
+      <!-- mapbox interop -->
+      <div class="panel">
+        <h3><span class="badge">⬢</span> map-view · mapbox interop</h3>
+        <div class="body">
+          <ul class="notes">
+            <li><b>Your <code class="inl">map-view</code> form-3 already does this</b> — keep <code class="inl">create-map!</code> in <code class="inl">:component-did-mount</code>, <code class="inl">.remove</code> in <code class="inl">:component-will-unmount</code>, render <code class="inl">[:div#jw-map]</code> (sized by the <code class="inl">#jw-map</code> rule in <code class="inl">tailwind.css</code>).</li>
+            <li><b>Swap <code class="inl">.panTo</code> → <code class="inl">.flyTo</code></b> for the eased camera: <code class="inl">(.flyTo m #js {:center lnglat :zoom z :duration 1500 :curve 1.42 :essential true})</code>.</li>
+            <li><b>Keep a marker vector</b> so you can highlight: have <code class="inl">create-marker!</code> build a custom DOM el (click → <code class="inl">(reset! selected-location i)</code>) and collect the <code class="inl">Marker</code> objs in a <code class="inl">defonce</code> atom.</li>
+            <li><b>Drive the camera off a watch</b>, not render: <code class="inl">(add-watch selected-location ::fly (fn [_ _ _ i] (fly-to! i) (highlight! i)))</code> — mapbox stays outside Reagent's render loop.</li>
+            <li>Token already comes from the <code class="inl">load-mapbox-token</code> macro (<code class="inl">MAPBOX_PUBLIC_TOKEN</code> env) — no change.</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- interactions -->
+      <div class="panel">
+        <h3>interactions & layout variants</h3>
+        <div class="body">
+          <ul class="notes">
+            <li><b>Prev / Next</b> + <b>← / →</b> keys + <b>marker click</b> + <b>tick click</b> all just <code class="inl">swap!</code> / <code class="inl">reset!</code> the <code class="inl">selected-location</code> index.</li>
+            <li><b>flyTo</b> easing: <code class="inl">duration 1500</code>, <code class="inl">curve 1.42</code>, <code class="inl">essential true</code>; active marker scales up + pulses.</li>
+            <li>Card swaps with a short fade/translate-up on index change (use <code class="inl">^{:key i}</code> so Reagent remounts it).</li>
+          </ul>
+          <p style="font-size:12px; color:var(--ink-3); margin:4px 0 8px; font-family:var(--mono);">optional: a layout ratom drives where the card renders →</p>
+          <div class="pill-row">
+            <span class="pill">:below — between arrows</span>
+            <span class="pill">:overlay — on map</span>
+            <span class="pill">:rail — beside map</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- tokens -->
+      <div class="panel">
+        <h3>styling — tailwind v4 (css config)</h3>
+        <div class="body">
+          <ul class="notes">
+            <li>You're on <b>Tailwind v4</b> — config is <b>CSS-based</b> in <code class="inl">resources/css/tailwind.css</code> (<code class="inl">@import "tailwindcss"</code> + <code class="inl">@source "../../src"</code>). <b>There is no <code class="inl">tailwind.config.js</code>.</b> Utility classes stay in <code class="inl">:class</code> strings; <code class="inl">lein dev</code> rebuilds <code class="inl">style.css</code>.</li>
+            <li>If you want the hi-fi look, declare tokens in an <code class="inl">@theme</code> block (then <code class="inl">bg-paper</code>, <code class="inl">text-accent</code>, <code class="inl">font-serif</code> just work):</li>
+          </ul>
+<pre><span class="c">/* resources/css/tailwind.css */</span>
+@import <span class="s">"tailwindcss"</span>;
+@source <span class="s">"../../src"</span>;
+
+@theme {
+  --color-accent: <span class="s">#b85c38</span>;
+  --color-paper:  <span class="s">#f4f2ec</span>;
+  --font-serif: <span class="s">"Spectral"</span>, serif;
+  --font-mono:  <span class="s">"IBM Plex Mono"</span>, monospace;
+}
+
+<span class="c">/* keep your existing #jw-map sizing rule here */</span></pre>
+          <p style="font-size:12px; color:var(--ink-3); margin:10px 0 0; font-family:var(--mono);">Or skip the tokens and keep your current stone/default palette — this wireframe only fixes structure &amp; behavior.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

@@ -3,10 +3,67 @@
 /* Scan ClojureScript sources for utility class names */
 @source "../../src";
 
-/* Add any custom CSS below this line */
+/* ---- Field-notes design tokens (Tailwind v4 CSS config) ---- */
+@theme {
+  --color-paper:       #f4f2ec;
+  --color-card:        #fbfaf6;
+  --color-ink:         #2c2a26;
+  --color-ink-2:       #6b6760;
+  --color-ink-3:       #9a958c;
+  --color-hatch:       #cfcabd;
+  --color-accent:      #b85c38;
+  --color-accent-soft: #f0dcd1;
+
+  --font-sans: "Public Sans", system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, monospace;
+  --font-hand: "Caveat", cursive;
+}
+
+/* ---- Add any custom CSS below this line ---- */
+
+/* Paper background with the dot grid from the wireframe */
+body {
+  margin: 0;
+  background-color: var(--color-paper);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  background-image: radial-gradient(#d9d4c7 1px, transparent 1px);
+  background-size: 20px 20px;
+  -webkit-font-smoothing: antialiased;
+}
+
 #jw-map {
   width: 100%;
-  height: 400px;
+  height: 320px;
   margin-top: 1rem;
+  border: 1.6px solid var(--color-ink-2);
   border-radius: 0.5rem;
+}
+
+/* Custom Mapbox markers (live outside Reagent's render loop) */
+.jw-marker {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--color-card);
+  border: 2px solid var(--color-ink-2);
+  cursor: pointer;
+  transition: width 0.2s ease, height 0.2s ease, background 0.2s ease,
+    box-shadow 0.2s ease;
+}
+.jw-marker--active {
+  width: 22px;
+  height: 22px;
+  background: var(--color-accent);
+  border-color: #fff;
+  box-shadow: 0 0 0 6px rgba(184, 92, 56, 0.18);
+}
+
+/* Card swap: short fade + translate-up on index change */
+@keyframes jw-card-in {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.jw-card {
+  animation: jw-card-in 0.22s ease;
 }
