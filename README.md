@@ -3,6 +3,8 @@
 An interactive map demo introducing my GIS engineering experience, built for the
 **Full Stack Developer – Pyrecast** role at Spatial Informatics Group.
 
+**Live demo:** https://jw-gis-experience.netlify.app/
+
 ## Overview
 
 I learned to consider maintainability, simplicity, and reliability in every
